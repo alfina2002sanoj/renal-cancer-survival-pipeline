@@ -1,8 +1,3 @@
-# ============================================================
-#  ENCORI SCRAPER - FINAL VERSION
-#  Reads p-value and HR directly from the KIRP survival graph
-# ============================================================
-
 import time
 import os
 import re
@@ -48,7 +43,7 @@ def scrape_gene(gene_id_clean, gene_id_original, sheet_name):
         driver.get(ENCORI_URL)
         time.sleep(2)
 
-        # Type gene ID in search box
+        
         gene_input = wait.until(
             EC.presence_of_element_located((By.XPATH,
                 "//input[@placeholder='PTEN']"
@@ -58,14 +53,14 @@ def scrape_gene(gene_id_clean, gene_id_original, sheet_name):
         gene_input.send_keys(gene_id_clean)
         time.sleep(0.5)
 
-        # Click Search
+       
         search_btn = wait.until(
             EC.element_to_be_clickable((By.XPATH, "//button[contains(text(),'Search')]"))
         )
         search_btn.click()
         time.sleep(4)
 
-        # Select Kidney Renal Papillary Cell Carcinoma in the Cancer dropdown
+        
         try:
             cancer_select = wait.until(
                 EC.presence_of_element_located((By.XPATH, "//select[contains(@class,'cancer') or contains(@id,'cancer') or contains(@name,'cancer')]"))
@@ -76,7 +71,7 @@ def scrape_gene(gene_id_clean, gene_id_original, sheet_name):
                     print(f"    Selected: {option.text}")
                     break
         except:
-            # Try any select dropdown that has Papillary option
+            
             try:
                 all_selects = driver.find_elements(By.TAG_NAME, "select")
                 for sel in all_selects:
@@ -89,25 +84,23 @@ def scrape_gene(gene_id_clean, gene_id_original, sheet_name):
             except Exception as e:
                 print(f"    Could not select cancer: {e}")
 
-        time.sleep(4)  # Wait for graph to update
+        time.sleep(4) 
 
-        # Read p-value and HR from the graph text
+       
         p_value = None
         hr_value = None
 
         try:
-            # The graph shows text like:
-            # "Log-Rank p=0.22"
-            # "Hazard Ratio=1.45"
+            
             page_source = driver.page_source
 
-            # Extract Log-Rank p value
+           
             p_match = re.search(r'Log-Rank p[=\s]*([0-9.eE+\-]+)', page_source)
             if p_match:
                 p_value = float(p_match.group(1))
                 print(f"    p-value: {p_value}")
 
-            # Extract Hazard Ratio
+            
             hr_match = re.search(r'Hazard Ratio[=\s]*([0-9.eE+\-]+)', page_source)
             if hr_match:
                 hr_value = float(hr_match.group(1))
@@ -119,7 +112,7 @@ def scrape_gene(gene_id_clean, gene_id_original, sheet_name):
         except Exception as e:
             print(f"    Could not extract values: {e}")
 
-        # Save screenshot
+       
         safe_name = gene_id_original.replace('.', '_').replace('/', '_')
         screenshot_path = os.path.join(GRAPHS_FOLDER, f"{sheet_name}_{safe_name}.png")
         driver.save_screenshot(screenshot_path)
@@ -131,9 +124,7 @@ def scrape_gene(gene_id_clean, gene_id_original, sheet_name):
         print(f"    FAILED: {e}")
         return None, None
 
-# ============================================================
-# MAIN LOOP
-# ============================================================
+
 
 print("\n--- Starting gene search ---")
 results = {sheet: {} for sheet in SHEETS}
@@ -157,9 +148,7 @@ for sheet in SHEETS:
 driver.quit()
 print("\n--- Browser closed ---")
 
-# ============================================================
-# WRITE RESULTS TO EXCEL
-# ============================================================
+
 
 print("\n--- Writing results to Excel ---")
 wb = load_workbook(EXCEL_FILE)
